@@ -1,8 +1,8 @@
 
-package com.example.demo.controllers;
+package com.example.demo.controller;
 
-import com.example.demo.models.User;
-import com.example.demo.repositories.UserRepository;
+import com.example.demo.entity.User;
+import com.example.demo.repository.UserRepository;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Predicate;
 import jakarta.validation.Valid;
@@ -31,27 +31,27 @@ public class UserController {
     }
 
     @PostMapping("")
-    public ResponseEntity<User> create(@Valid @RequestBody User entity) {
-        log.info("REST request to save User : {}", entity);
+    public ResponseEntity<User> create(@Valid @RequestBody User body) {
+        log.info("REST request to save User : {}", body);
 
         try {
-            User result = userRepository.save(entity);
-            return new ResponseEntity<>(result, HttpStatus.CREATED);
+            User entity = userRepository.save(body);
+            return new ResponseEntity<>(entity, HttpStatus.CREATED);
         } catch (Exception e) {
-            log.error("Error creating project: {}", e.getMessage(), e);
+            log.error("Error creating User: {}", e.getMessage(), e);
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         }
     }
 
     @PutMapping("")
-    public ResponseEntity<User> update(@Valid @RequestBody User entity) {
-        log.info("REST request to update User : {}", entity);
+    public ResponseEntity<User> update(@Valid @RequestBody User body) {
+        log.info("REST request to update User : {}", body);
 
         try {
-            User result = userRepository.save(entity);
-            return new ResponseEntity<>(result, HttpStatus.OK);
+            User entity = userRepository.save(body);
+            return new ResponseEntity<>(entity, HttpStatus.OK);
         } catch (Exception e) {
-            log.error("Error updating project", e);
+            log.error("Error updating User", e);
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         }
     }
@@ -78,10 +78,10 @@ public class UserController {
         log.info("REST request to get User : {}", id);
 
         try {
-            User project = userRepository.findById(id).orElse(null);
-            return new ResponseEntity<>(project, HttpStatus.OK);
+            User entity = userRepository.findById(id).orElse(null);
+            return new ResponseEntity<>(entity, HttpStatus.OK);
         } catch (Exception e) {
-            log.error("Error getting project", e);
+            log.error("Error getting User", e);
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -94,7 +94,7 @@ public class UserController {
             userRepository.deleteById(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (Exception e) {
-            log.error("Error deleting project", e);
+            log.error("Error deleting User", e);
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

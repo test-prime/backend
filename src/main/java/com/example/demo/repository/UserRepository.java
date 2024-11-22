@@ -1,7 +1,7 @@
-package com.example.demo.repositories;
+package com.example.demo.repository;
 
-import com.example.demo.models.QUser;
-import com.example.demo.models.User;
+import com.example.demo.entity.QUser;
+import com.example.demo.entity.User;
 import org.bitbucket.gt_tech.spring.data.querydsl.value.operators.ExpressionProviderFactory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;

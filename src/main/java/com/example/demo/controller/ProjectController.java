@@ -1,13 +1,15 @@
-package com.example.demo.controllers;
+package com.example.demo.controller;
 
-import com.example.demo.models.Project;
-import com.example.demo.repositories.ProjectRepository;
-import com.querydsl.core.BooleanBuilder;
+import com.example.demo.dto.QueryResult;
+import com.example.demo.entity.Project;
+import com.example.demo.service.ProjectService;
 import com.querydsl.core.types.Predicate;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.querydsl.binding.QuerydslPredicate;
 import org.springframework.http.HttpHeaders;
@@ -23,19 +25,16 @@ import java.util.List;
 public class ProjectController {
     private final Logger log = LoggerFactory.getLogger(ProjectController.class);
 
-    private final ProjectRepository projectRepository;
-
-    public ProjectController(ProjectRepository projectRepository) {
-        this.projectRepository = projectRepository;
-    }
+    @Autowired
+    private ProjectService projectService;
 
     @PostMapping("")
-    public ResponseEntity<Project> create(@Valid @RequestBody Project entity) {
-        log.info("REST request to save Project : {}", entity);
+    public ResponseEntity<Project> create(@Valid @RequestBody Project body) {
+        log.info("REST request to save Project : {}", body);
 
         try {
-            Project result = projectRepository.save(entity);
-            return new ResponseEntity<>(result, HttpStatus.CREATED);
+            Project entity = projectService.create(body);
+            return new ResponseEntity<>(entity, HttpStatus.CREATED);
         } catch (Exception e) {
             log.error("Error creating project: {}", e.getMessage(), e);
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
@@ -43,12 +42,12 @@ public class ProjectController {
     }
 
     @PutMapping("")
-    public ResponseEntity<Project> update(@Valid @RequestBody Project entity) {
-        log.info("REST request to update Project : {}", entity);
+    public ResponseEntity<Project> update(@Valid @RequestBody Project body) {
+        log.info("REST request to update Project : {}", body);
 
         try {
-            Project result = projectRepository.save(entity);
-            return new ResponseEntity<>(result, HttpStatus.OK);
+            Project entity = projectService.update(body);
+            return new ResponseEntity<>(entity, HttpStatus.OK);
         } catch (Exception e) {
             log.error("Error updating project", e);
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
@@ -56,20 +55,15 @@ public class ProjectController {
     }
 
     @GetMapping("")
-    public ResponseEntity<List<Project>> query(@QuerydslPredicate(root = Project.class) Predicate predicate, Pageable pageable) {
+    public ResponseEntity<List<Project>> findAll(@QuerydslPredicate(root = Project.class) Predicate predicate, Pageable pageable) {
         log.info("REST request to get Projects, predicate: {}, pageable: {}", predicate, pageable);
 
-        boolean isEmptyPredicate = predicate == null ||
-                (predicate instanceof BooleanBuilder && !((BooleanBuilder) predicate).hasValue());
-
-        Page<Project> page = isEmptyPredicate
-                ? projectRepository.findAll(pageable)
-                : projectRepository.findAll(predicate, pageable);
+        QueryResult<Project> result = projectService.findAll(predicate, pageable);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.add("X-Total-Count", String.valueOf(page.getTotalElements()));
+        headers.add("X-Total-Count", String.valueOf(result.getTotal()));
 
-        return ResponseEntity.ok().body(page.getContent());
+        return ResponseEntity.ok().body(result.getEntities());
     }
 
     @GetMapping("/{id}")
@@ -77,8 +71,8 @@ public class ProjectController {
         log.info("REST request to get Project : {}", id);
 
         try {
-            Project project = projectRepository.findById(id).orElse(null);
-            return new ResponseEntity<>(project, HttpStatus.OK);
+            Project entity = projectService.findById(id).orElse(null);
+            return new ResponseEntity<>(entity, HttpStatus.OK);
         } catch (Exception e) {
             log.error("Error getting project", e);
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -86,11 +80,11 @@ public class ProjectController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Project> deleteSubject(@PathVariable Integer id) {
+    public ResponseEntity<Project> delete(@PathVariable Integer id) {
         log.info("REST request to delete Project : {}", id);
 
         try {
-            projectRepository.deleteById(id);
+            projectService.deleteById(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (Exception e) {
             log.error("Error deleting project", e);

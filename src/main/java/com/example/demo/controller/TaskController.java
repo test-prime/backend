@@ -1,8 +1,8 @@
 
-package com.example.demo.controllers;
+package com.example.demo.controller;
 
-import com.example.demo.models.Task;
-import com.example.demo.repositories.TaskRepository;
+import com.example.demo.entity.Task;
+import com.example.demo.repository.TaskRepository;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Predicate;
 import jakarta.validation.Valid;
@@ -31,27 +31,27 @@ public class TaskController {
     }
 
     @PostMapping("")
-    public ResponseEntity<Task> create(@Valid @RequestBody Task entity) {
-        log.info("REST request to save Task : {}", entity);
+    public ResponseEntity<Task> create(@Valid @RequestBody Task body) {
+        log.info("REST request to save Task : {}", body);
 
         try {
-            Task result = taskRepository.save(entity);
-            return new ResponseEntity<>(result, HttpStatus.CREATED);
+            Task entity = taskRepository.save(body);
+            return new ResponseEntity<>(entity, HttpStatus.CREATED);
         } catch (Exception e) {
-            log.error("Error creating project: {}", e.getMessage(), e);
+            log.error("Error creating Task: {}", e.getMessage(), e);
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         }
     }
 
     @PutMapping("")
-    public ResponseEntity<Task> update(@Valid @RequestBody Task entity) {
-        log.info("REST request to update Task : {}", entity);
+    public ResponseEntity<Task> update(@Valid @RequestBody Task body) {
+        log.info("REST request to update Task : {}", body);
 
         try {
-            Task result = taskRepository.save(entity);
-            return new ResponseEntity<>(result, HttpStatus.OK);
+            Task entity = taskRepository.save(body);
+            return new ResponseEntity<>(entity, HttpStatus.OK);
         } catch (Exception e) {
-            log.error("Error updating project", e);
+            log.error("Error updating Task", e);
             return new ResponseEntity<>(null, HttpStatus.BAD_REQUEST);
         }
     }
@@ -78,10 +78,10 @@ public class TaskController {
         log.info("REST request to get Task : {}", id);
 
         try {
-            Task project = taskRepository.findById(id).orElse(null);
-            return new ResponseEntity<>(project, HttpStatus.OK);
+            Task entity = taskRepository.findById(id).orElse(null);
+            return new ResponseEntity<>(entity, HttpStatus.OK);
         } catch (Exception e) {
-            log.error("Error getting project", e);
+            log.error("Error getting Task", e);
             return new ResponseEntity<>(null, HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
@@ -94,7 +94,7 @@ public class TaskController {
             taskRepository.deleteById(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (Exception e) {
-            log.error("Error deleting project", e);
+            log.error("Error deleting Task", e);
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }

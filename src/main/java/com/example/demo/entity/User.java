@@ -1,10 +1,10 @@
-package com.example.demo.models;
+package com.example.demo.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.example.demo.constant.UserRole;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
-import org.hibernate.annotations.ColumnTransformer;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -17,26 +17,24 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @ToString
-@Entity(name = "projects")
-public class Project implements Serializable {
+@Entity(name = "users")
+public class User implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @NotBlank(message = "Name is required")
-    private String name;
+    @NotBlank(message = "Username is required")
+    private String username;
 
-    private String description = "";
+    @NotBlank(message = "Email is required")
+    private String email;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "owner_id", referencedColumnName = "id", nullable = false)
-    private User owner;
+    @Enumerated(EnumType.STRING)
+    @NotBlank(message = "Role is required")
+    private UserRole role;
 
-    @JsonIgnore
     @CreationTimestamp
     private LocalDateTime createdAt;
-
-    @JsonIgnore
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 }
