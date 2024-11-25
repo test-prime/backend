@@ -16,9 +16,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.querydsl.binding.QuerydslPredicate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ProjectService {
@@ -43,9 +46,11 @@ public class ProjectService {
         }
     }
 
-    @Cacheable(value = "projects", key = "'all_projects_' + #predicate.toString() + '_' + #pageable.pageNumber + '_' + #pageable.pageSize + '_' + #pageable.sort.toString()")
-    public QueryResult<Project> findAll(@QuerydslPredicate(root = Project.class) Predicate predicate, Pageable pageable) {
+    @Transactional()
+    @Cacheable(value = "projects", key = "#queryString")
+    public QueryResult<Project> findAll(@QuerydslPredicate(root = Project.class) Predicate predicate, Pageable pageable, String queryString) {
         log.info("Finding all projects with predicate: {}, pageable: {}", predicate, pageable);
+
         boolean isEmptyPredicate = predicate == null ||
                 (predicate instanceof BooleanBuilder && !((BooleanBuilder) predicate).hasValue());
 
@@ -54,6 +59,7 @@ public class ProjectService {
                 : projectRepository.findAll(predicate, pageable);
 
         QueryResult<Project> result = new QueryResult<>();
+
         result.setTotal(page.getTotalElements());
         result.setEntities(page.getContent());
 
@@ -66,7 +72,7 @@ public class ProjectService {
         return projectRepository.findById(id);
     }
 
-    @CacheEvict(value = "projects", key = "#id")
+    @CacheEvict(value = "projects", allEntries = true)
     public void deleteById(Integer id) { // Changed Long to Integer to match ProjectRepository if ID is Integer
         log.info("Deleting project by ID: {}", id);
         projectRepository.deleteById(id); // Correct repository reference

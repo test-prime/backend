@@ -4,6 +4,7 @@ import com.example.demo.dto.QueryResult;
 import com.example.demo.entity.Task;
 import com.example.demo.entity.User;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.util.Security;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Predicate;
 import org.slf4j.Logger;
@@ -15,7 +16,10 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.querydsl.binding.QuerydslPredicate;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.hibernate.Hibernate;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,9 +31,14 @@ public class UserService {
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
     @CacheEvict(value = "users", allEntries = true)
     public User create(User entity) {
         log.info("Creating user: {}", entity);
+        String encryptedPassword = passwordEncoder.encode(entity.getPassword());
+        entity.setPassword(encryptedPassword);
         return userRepository.save(entity);
     }
 
@@ -37,14 +46,21 @@ public class UserService {
     public User update(User entity) {
         if (userRepository.existsById(entity.getId())) {
             log.info("Updating user with ID: {}", entity.getId());
+            userRepository.findById(entity.getId()).ifPresent(user -> {
+                String currentEncryptedPassword = user.getPassword();
+                if (!passwordEncoder.matches(entity.getPassword(), currentEncryptedPassword)) {
+                    String encryptedPassword = passwordEncoder.encode(entity.getPassword());
+                    entity.setPassword(encryptedPassword);
+                }
+            });
             return userRepository.save(entity);
         } else {
             throw new IllegalArgumentException("User with ID " + entity.getId() + " does not exist.");
         }
     }
-
-    @Cacheable(value = "users", key = "'all_users_' + #predicate.toString() + '_' + #pageable.pageNumber + '_' + #pageable.pageSize + '_' + #pageable.sort.toString()")
-    public QueryResult<User> findAll(@QuerydslPredicate(root = User.class) Predicate predicate, Pageable pageable) {
+    @Transactional
+    @Cacheable(value = "users", key = "#queryString")
+    public QueryResult<User> findAll(@QuerydslPredicate(root = User.class) Predicate predicate, Pageable pageable, String queryString) {
         log.info("Finding all users with predicate: {}, pageable: {}", predicate, pageable);
         boolean isEmptyPredicate = predicate == null ||
                 (predicate instanceof BooleanBuilder && !((BooleanBuilder) predicate).hasValue());
@@ -66,9 +82,13 @@ public class UserService {
         return userRepository.findById(id);
     }
 
-    @CacheEvict(value = "users", key = "#id")
+    @CacheEvict(value = "users", allEntries = true)
     public void deleteById(Integer id) { // Changed Long to Integer to match UserRepository if ID is Integer
         log.info("Deleting user by ID: {}", id);
         userRepository.deleteById(id); // Correct repository reference
+    }
+
+    public Optional<User> getUserWithRoles() {
+        return Security.getCurrentUserLogin().flatMap(userRepository::findOneByUsername);
     }
 }

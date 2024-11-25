@@ -1,7 +1,9 @@
 package com.example.demo.entity;
 
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSetter;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -20,6 +22,8 @@ import java.time.LocalDateTime;
 @ToString
 @Entity(name = "projects")
 public class Project implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -42,11 +46,16 @@ public class Project implements Serializable {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
-    @JsonProperty("owner_id")
+    @JsonSetter("owner_id")
     public void setOwnerId(Integer ownerId) {
         if (ownerId != null) {
             this.owner = new User();  // Assuming User constructor or service will fetch User from ID
             this.owner.setId(ownerId); // Set owner ID manually (assuming `setId` exists on User)
         }
+    }
+
+    @JsonGetter("owner_id")
+    public Integer getOwnerId() {
+        return owner != null ? owner.getId() : null;
     }
 }

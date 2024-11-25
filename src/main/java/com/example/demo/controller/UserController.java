@@ -1,13 +1,19 @@
 
 package com.example.demo.controller;
 
+import com.example.demo.dto.QueryResult;
+import com.example.demo.entity.Project;
 import com.example.demo.entity.User;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.UserService;
 import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Predicate;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.querydsl.binding.QuerydslPredicate;
@@ -15,6 +21,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.List;
 
@@ -24,18 +32,20 @@ import java.util.List;
 public class UserController {
     private final Logger log = LoggerFactory.getLogger(UserController.class);
 
-    private final UserRepository userRepository;
+    @Autowired
+    private final UserService userService;
 
-    public UserController(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
+
 
     @PostMapping("")
     public ResponseEntity<User> create(@Valid @RequestBody User body) {
         log.info("REST request to save User : {}", body);
 
         try {
-            User entity = userRepository.save(body);
+            User entity = userService.create(body);
             return new ResponseEntity<>(entity, HttpStatus.CREATED);
         } catch (Exception e) {
             log.error("Error creating User: {}", e.getMessage(), e);
@@ -48,7 +58,7 @@ public class UserController {
         log.info("REST request to update User : {}", body);
 
         try {
-            User entity = userRepository.save(body);
+            User entity = userService.update(body);
             return new ResponseEntity<>(entity, HttpStatus.OK);
         } catch (Exception e) {
             log.error("Error updating User", e);
@@ -57,20 +67,16 @@ public class UserController {
     }
 
     @GetMapping("")
-    public ResponseEntity<List<User>> query(@QuerydslPredicate(root = User.class) Predicate predicate, Pageable pageable) {
+    public ResponseEntity<List<User>> query(HttpServletRequest request, @QuerydslPredicate(root = User.class) Predicate predicate, Pageable pageable) {
         log.info("REST request to get Users, predicate: {}, pageable: {}", predicate, pageable);
 
-        boolean isEmptyPredicate = predicate == null ||
-                (predicate instanceof BooleanBuilder && !((BooleanBuilder) predicate).hasValue());
-
-        Page<User> page = isEmptyPredicate
-                ? userRepository.findAll(pageable)
-                : userRepository.findAll(predicate, pageable);
+        String queryString = request.getQueryString();
+        QueryResult<User> result = userService.findAll(predicate, pageable, queryString);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.add("X-Total-Count", String.valueOf(page.getTotalElements()));
+        headers.add("X-Total-Count", String.valueOf(result.getTotal()));
 
-        return ResponseEntity.ok().body(page.getContent());
+        return ResponseEntity.ok().body(result.getEntities());
     }
 
     @GetMapping("/{id}")
@@ -78,7 +84,7 @@ public class UserController {
         log.info("REST request to get User : {}", id);
 
         try {
-            User entity = userRepository.findById(id).orElse(null);
+            User entity = userService.findById(id).orElse(null);
             return new ResponseEntity<>(entity, HttpStatus.OK);
         } catch (Exception e) {
             log.error("Error getting User", e);
@@ -91,7 +97,7 @@ public class UserController {
         log.info("REST request to delete User : {}", id);
 
         try {
-            userRepository.deleteById(id);
+            userService.deleteById(id);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (Exception e) {
             log.error("Error deleting User", e);

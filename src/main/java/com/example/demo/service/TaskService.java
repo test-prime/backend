@@ -43,8 +43,8 @@ public class TaskService {
         }
     }
 
-    @Cacheable(value = "tasks", key = "'all_tasks_' + #predicate.toString() + '_' + #pageable.pageNumber + '_' + #pageable.pageSize + '_' + #pageable.sort.toString()")
-    public QueryResult<Task> findAll(@QuerydslPredicate(root = Task.class) Predicate predicate, Pageable pageable) {
+    @Cacheable(value = "tasks", key = "#queryString")
+    public QueryResult<Task> findAll(@QuerydslPredicate(root = Task.class) Predicate predicate, Pageable pageable, String queryString) {
         log.info("Finding all tasks with predicate: {}, pageable: {}", predicate, pageable);
         boolean isEmptyPredicate = predicate == null ||
                 (predicate instanceof BooleanBuilder && !((BooleanBuilder) predicate).hasValue());
@@ -66,7 +66,7 @@ public class TaskService {
         return taskRepository.findById(id);
     }
 
-    @CacheEvict(value = "tasks", key = "#id")
+    @CacheEvict(value = "tasks", allEntries = true)
     public void deleteById(Integer id) { // Changed Long to Integer to match TaskRepository if ID is Integer
         log.info("Deleting task by ID: {}", id);
         taskRepository.deleteById(id); // Correct repository reference
