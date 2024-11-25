@@ -4,6 +4,7 @@ import com.example.demo.dto.QueryResult;
 import com.example.demo.entity.Project;
 import com.example.demo.service.ProjectService;
 import com.querydsl.core.types.Predicate;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,10 +56,11 @@ public class ProjectController {
     }
 
     @GetMapping("")
-    public ResponseEntity<List<Project>> findAll(@QuerydslPredicate(root = Project.class) Predicate predicate, Pageable pageable) {
+    public ResponseEntity<List<Project>> findAll(HttpServletRequest request, @QuerydslPredicate(root = Project.class) Predicate predicate, Pageable pageable) {
         log.info("REST request to get Projects, predicate: {}, pageable: {}", predicate, pageable);
 
-        QueryResult<Project> result = projectService.findAll(predicate, pageable);
+        String queryString = request.getQueryString();
+        QueryResult<Project> result = projectService.findAll(predicate, pageable, queryString);
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Total-Count", String.valueOf(result.getTotal()));
