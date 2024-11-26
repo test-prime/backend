@@ -1,7 +1,6 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.QueryResult;
-import com.example.demo.entity.Task;
 import com.example.demo.entity.User;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.util.Security;
@@ -19,9 +18,8 @@ import org.springframework.data.querydsl.binding.QuerydslPredicate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.hibernate.Hibernate;
 
-import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -42,13 +40,13 @@ public class UserService {
         return userRepository.save(entity);
     }
 
-    @CachePut(value = "users", key = "#entity.id")
+    @CacheEvict(value = "users", allEntries = true)
     public User update(User entity) {
         if (userRepository.existsById(entity.getId())) {
             log.info("Updating user with ID: {}", entity.getId());
             userRepository.findById(entity.getId()).ifPresent(user -> {
                 String currentEncryptedPassword = user.getPassword();
-                if (!passwordEncoder.matches(entity.getPassword(), currentEncryptedPassword)) {
+                if (!Objects.equals(entity.getPassword(), currentEncryptedPassword)) {
                     String encryptedPassword = passwordEncoder.encode(entity.getPassword());
                     entity.setPassword(encryptedPassword);
                 }
@@ -58,6 +56,7 @@ public class UserService {
             throw new IllegalArgumentException("User with ID " + entity.getId() + " does not exist.");
         }
     }
+
     @Transactional
     @Cacheable(value = "users", key = "#queryString")
     public QueryResult<User> findAll(@QuerydslPredicate(root = User.class) Predicate predicate, Pageable pageable, String queryString) {
@@ -76,6 +75,7 @@ public class UserService {
         return result; // Cache only the list of users
     }
 
+    @Transactional()
     @Cacheable(value = "users", key = "#id")
     public Optional<User> findById(Integer id) {
         log.info("Finding user by ID: {}", id);

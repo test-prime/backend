@@ -9,8 +9,6 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.querydsl.binding.QuerydslPredicate;
 import org.springframework.http.HttpHeaders;
@@ -59,13 +57,13 @@ public class ProjectController {
     public ResponseEntity<List<Project>> findAll(HttpServletRequest request, @QuerydslPredicate(root = Project.class) Predicate predicate, Pageable pageable) {
         log.info("REST request to get Projects, predicate: {}, pageable: {}", predicate, pageable);
 
-        String queryString = request.getQueryString();
+        String queryString = request.getQueryString() != null ? request.getQueryString() : "";
         QueryResult<Project> result = projectService.findAll(predicate, pageable, queryString);
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Total-Count", String.valueOf(result.getTotal()));
 
-        return ResponseEntity.ok().body(result.getEntities());
+        return ResponseEntity.ok().headers(headers).body(result.getEntities());
     }
 
     @GetMapping("/{id}")

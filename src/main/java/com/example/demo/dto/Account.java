@@ -3,9 +3,7 @@ package com.example.demo.dto;
 import com.example.demo.entity.User;
 import lombok.Data;
 
-import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Data
 public class Account {

@@ -2,7 +2,6 @@ package com.example.demo.entity;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -53,11 +52,11 @@ public class User implements Serializable {
 
     @JsonGetter("createdAt")
     public String getFormattedCreatedAt() {
-        return createdAt.toString();
+        return createdAt != null ? createdAt.toString() : null;
     }
 
     @JsonGetter("updatedAt")
     public String getFormattedUpdatedAt() {
-        return updatedAt.toString();
+        return updatedAt != null ? updatedAt.toString() : null;
     }
 }

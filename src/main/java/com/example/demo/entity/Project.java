@@ -2,12 +2,12 @@ package com.example.demo.entity;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSetter;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -33,9 +33,8 @@ public class Project implements Serializable {
 
     private String description = "";
 
-    @ManyToOne(cascade = CascadeType.REMOVE)
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "owner_id", referencedColumnName = "id")
-    @NotNull
     private User owner;
 
     @JsonIgnore
@@ -57,5 +56,15 @@ public class Project implements Serializable {
     @JsonGetter("owner_id")
     public Integer getOwnerId() {
         return owner != null ? owner.getId() : null;
+    }
+
+    @JsonGetter("createdAt")
+    public String getFormattedCreatedAt() {
+        return createdAt != null ? createdAt.toString() : null;
+    }
+
+    @JsonGetter("updatedAt")
+    public String getFormattedUpdatedAt() {
+        return updatedAt != null ? updatedAt.toString() : null;
     }
 }

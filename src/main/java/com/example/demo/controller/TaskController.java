@@ -1,19 +1,14 @@
-
 package com.example.demo.controller;
 
 import com.example.demo.dto.QueryResult;
-import com.example.demo.entity.Project;
 import com.example.demo.entity.Task;
-import com.example.demo.repository.taskService;
 import com.example.demo.service.TaskService;
-import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.Predicate;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.querydsl.binding.QuerydslPredicate;
 import org.springframework.http.HttpHeaders;
@@ -62,13 +57,13 @@ public class TaskController {
     public ResponseEntity<List<Task>> query(HttpServletRequest request, @QuerydslPredicate(root = Task.class) Predicate predicate, Pageable pageable) {
         log.info("REST request to get Tasks, predicate: {}, pageable: {}", predicate, pageable);
 
-        String queryString = request.getQueryString();
+        String queryString = request.getQueryString() != null ? request.getQueryString() : "";
         QueryResult<Task> result = taskService.findAll(predicate, pageable, queryString);
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("X-Total-Count", String.valueOf(result.getTotal()));
 
-        return ResponseEntity.ok().body(result.getEntities());
+        return ResponseEntity.ok().headers(headers).body(result.getEntities());
     }
 
     @GetMapping("/{id}")

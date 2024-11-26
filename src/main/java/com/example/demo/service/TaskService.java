@@ -1,7 +1,6 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.QueryResult;
-import com.example.demo.entity.Project;
 import com.example.demo.entity.Task;
 import com.example.demo.repository.TaskRepository;
 import com.querydsl.core.BooleanBuilder;
@@ -16,8 +15,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.querydsl.binding.QuerydslPredicate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -33,7 +32,7 @@ public class TaskService {
         return taskRepository.save(entity);
     }
 
-    @CachePut(value = "tasks", key = "#entity.id")
+    @CacheEvict(value = "tasks", allEntries = true)
     public Task update(Task entity) {
         if (taskRepository.existsById(entity.getId())) {
             log.info("Updating task with ID: {}", entity.getId());
@@ -42,7 +41,7 @@ public class TaskService {
             throw new IllegalArgumentException("Task with ID " + entity.getId() + " does not exist.");
         }
     }
-
+    @Transactional
     @Cacheable(value = "tasks", key = "#queryString")
     public QueryResult<Task> findAll(@QuerydslPredicate(root = Task.class) Predicate predicate, Pageable pageable, String queryString) {
         log.info("Finding all tasks with predicate: {}, pageable: {}", predicate, pageable);
@@ -60,6 +59,7 @@ public class TaskService {
         return result; // Cache only the list of tasks
     }
 
+    @Transactional()
     @Cacheable(value = "tasks", key = "#id")
     public Optional<Task> findById(Integer id) {
         log.info("Finding task by ID: {}", id);

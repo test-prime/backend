@@ -1,6 +1,5 @@
 package com.example.demo.service;
 
-import com.example.demo.controller.ProjectController;
 import com.example.demo.dto.QueryResult;
 import com.example.demo.entity.Project;
 import com.example.demo.repository.ProjectRepository;
@@ -18,10 +17,7 @@ import org.springframework.data.querydsl.binding.QuerydslPredicate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class ProjectService {
@@ -36,7 +32,7 @@ public class ProjectService {
         return projectRepository.save(entity);
     }
 
-    @CachePut(value = "projects", key = "#entity.id")
+    @CacheEvict(value = "projects", allEntries = true)
     public Project update(Project entity) {
         if (projectRepository.existsById(entity.getId())) {
             log.info("Updating project with ID: {}", entity.getId());
@@ -66,6 +62,7 @@ public class ProjectService {
         return result; // Cache only the list of projects
     }
 
+    @Transactional()
     @Cacheable(value = "projects", key = "#id")
     public Optional<Project> findById(Integer id) {
         log.info("Finding project by ID: {}", id);
@@ -73,8 +70,11 @@ public class ProjectService {
     }
 
     @CacheEvict(value = "projects", allEntries = true)
-    public void deleteById(Integer id) { // Changed Long to Integer to match ProjectRepository if ID is Integer
+    public void deleteById(Integer id) {
         log.info("Deleting project by ID: {}", id);
-        projectRepository.deleteById(id); // Correct repository reference
+        Project project = projectRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("Project with ID " + id + " does not exist."));
+        project.setOwner(null);
+        projectRepository.save(project);
+        projectRepository.deleteById(id);
     }
 }

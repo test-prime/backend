@@ -1,9 +1,10 @@
 package com.example.demo.entity;
 
-import com.example.demo.constant.TaskStatus;
+import com.fasterxml.jackson.annotation.JsonGetter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -26,8 +27,9 @@ public class Task implements Serializable {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    @ManyToOne(cascade = CascadeType.REMOVE)
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "project_id", referencedColumnName = "id")
+    @NotNull
     private Project project;
 
     @NotBlank(message = "Title is required")
@@ -35,11 +37,11 @@ public class Task implements Serializable {
 
     private String description = "";
 
-    @Enumerated(EnumType.STRING)
-    private TaskStatus status;
+    private String status;
 
-    @ManyToOne(cascade = CascadeType.REMOVE)
+    @ManyToOne(fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "assigned_to", referencedColumnName = "id")
+    @NotNull
     private User user;
 
     @CreationTimestamp
@@ -61,5 +63,25 @@ public class Task implements Serializable {
             this.user = new User();  // Assuming User constructor or service will fetch User from ID
             this.user.setId(assigned_to); // Set assignedTo ID manually (assuming `setId` exists on User)
         }
+    }
+
+    @JsonGetter("project_id")
+    public Integer getProjectId() {
+        return project != null ? project.getId() : null;
+    }
+
+    @JsonGetter("assigned_to")
+    public Integer getAssignedTo() {
+        return user != null ? user.getId() : null;
+    }
+
+    @JsonGetter("createdAt")
+    public String getFormattedCreatedAt() {
+        return createdAt.toString();
+    }
+
+    @JsonGetter("updatedAt")
+    public String getFormattedUpdatedAt() {
+        return updatedAt.toString();
     }
 }

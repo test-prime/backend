@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api")
 public class AccountController {
 
-    private static final Logger LOG = LoggerFactory.getLogger(AccountController.class);
+    private static final Logger log = LoggerFactory.getLogger(AccountController.class);
 
     private final JwtEncoder jwtEncoder;
 
@@ -70,9 +70,10 @@ public class AccountController {
     @PostMapping("/authenticate")
     public ResponseEntity<JWTToken> authorize(@Valid @RequestBody LoginVM loginVM) {
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(
-            loginVM.getUsername(),
-            loginVM.getPassword()
+                loginVM.getUsername(),
+                loginVM.getPassword()
         );
+        log.debug("Authenticating {}", loginVM.getUsername());
 
         Authentication authentication = authenticationManagerBuilder.getObject().authenticate(authenticationToken);
         SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -90,7 +91,7 @@ public class AccountController {
      */
     @GetMapping(value = "/authenticate", produces = MediaType.TEXT_PLAIN_VALUE)
     public String isAuthenticated(Principal principal) {
-        LOG.debug("REST request to check if the current user is authenticated");
+        log.debug("REST request to check if the current user is authenticated");
         return principal == null ? null : principal.getName();
     }
 
@@ -115,7 +116,7 @@ public class AccountController {
             .claim("auth", authorities)
             .build();
 
-        JwsHeader jwsHeader = JwsHeader.with(MacAlgorithm.HS512).build();
+        JwsHeader jwsHeader = JwsHeader.with(MacAlgorithm.HS256).build();
         return this.jwtEncoder.encode(JwtEncoderParameters.from(jwsHeader, claims)).getTokenValue();
     }
 
