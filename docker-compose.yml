@@ -29,6 +29,9 @@ services:
     image: phamduchuy92/test-prime-backend:latest
     ports:
       - 8080:8080
+    depends_on:
+      - mysql
+      - redis
     networks:
       - my_network
 
