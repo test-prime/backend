@@ -1,7 +1,7 @@
 name: demo
 services:
   mysql:
-    name: mysql
+    container_name: mysql
     image: mysql:9.1.0
     environment:
       MYSQL_ROOT_PASSWORD: password
@@ -9,7 +9,7 @@ services:
       MYSQL_USER: prime
       MYSQL_PASSWORD: password
     ports:
-      - 3306:3307
+      - 3307:3306
     command: mysqld --lower_case_table_names=1 --skip-mysqlx --character_set_server=utf8mb4 --explicit_defaults_for_timestamp
     networks:
       - my_network
@@ -17,15 +17,15 @@ services:
       - mysql_data:/var/lib/mysql
 
   redis:
-    name: redis
+    container_name: redis
     image: redis:7.4.1
     ports:
-      - 6379:6380
+      - 6380:6379
     networks:
       - my_network
 
   backend:
-    name: backend
+    container_name: backend
     image: phamduchuy92/test-prime-backend:latest
     ports:
       - 8080:8080
