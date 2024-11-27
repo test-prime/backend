@@ -2,6 +2,7 @@ package com.example.demo.repository;
 
 import com.example.demo.entity.QUser;
 import com.example.demo.entity.User;
+import jakarta.annotation.PostConstruct;
 import org.bitbucket.gt_tech.spring.data.querydsl.value.operators.ExpressionProviderFactory;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.jpa.repository.EntityGraph;
