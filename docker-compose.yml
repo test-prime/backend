@@ -32,6 +32,12 @@ services:
     depends_on:
       - mysql
       - redis
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/prime
+      SPRING_DATASOURCE_USERNAME: prime
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
     networks:
       - my_network
 
