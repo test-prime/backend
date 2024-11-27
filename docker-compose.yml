@@ -1,0 +1,30 @@
+name: demo
+services:
+  mysql:
+    image: mysql:9.1.0
+    environment:
+      - MYSQL_DATABASE=prime
+      - MYSQL_USER: 'prime'
+      - MYSQL_PASSWORD: 'password'
+      - MYSQL_ROOT_PASSWORD: 'password'
+    ports:
+      - 3306:3306
+    command: mysqld --lower_case_table_names=1 --skip-mysqlx --character_set_server=utf8mb4 --explicit_defaults_for_timestamp
+    networks:
+      - my_network
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  redis:
+    image: redis:7.4.1
+    ports:
+      - 6379:6379
+    networks:
+      - my_network
+
+networks:
+  my_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
