@@ -35,6 +35,16 @@ services:
     networks:
       - my_network
 
+  frontend:
+    container_name: frontend
+    image: phamduchuy92/test-prime-frontend:latest
+    ports:
+      - 4433:4433
+    depends_on:
+      - backend
+    networks:
+      - my_network
+
 networks:
   my_network:
     driver: bridge
